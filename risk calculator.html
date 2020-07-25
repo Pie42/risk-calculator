@@ -1,0 +1,140 @@
+<label for='attackInput'>Attack: ​ ​</label>
+<input type='number' placeholder='Number of attackers...' min='1' step='1' id='attackInput' value='1'></input>
+<br>
+<label for='defenceInput'>Defence:</label>
+<input type='number' placeholder='Number of defenders...' min='1' step='1' id='defenceInput' value='1'></input>
+<br>
+<button onclick='setTR()'>True Random</button>
+<button onclick='setC()'>Capitals</button>
+<button onclick='setZ()'>Zombies</button>
+<br>
+<button onclick='simulate()'>Go!</button>
+<br>
+<p id='display'></p>
+<script>
+    //dictionaries will store it as attacking: {defending: [(either attack wins, defence wins or attack wins 2, defence wins 2, attack 1 defence 1 or attack wins 3, defence wins 3, attack 2 defence 1, attack 1 defence 2]}
+    var trueRandom = {1: {1: [15 / 36, 21 / 36], 2: [25.462962962963 / 100, 161 / 216]}, 2: {1: [57.8703703703704 / 100, 91 / 216], 2: [295 / 1296, 581 / 1296, 420 / 1296]}, 3: {1: [855 / 1296, 441 / 1296], 2: [2890 / 7776, 2275 / 7776, 33.5776748971193 / 100]}};
+    var capitals = {1: {1: [15 / 36, 21 / 36], 2: [25.462962962963 / 100, 161 / 216], 3: [25 / 144, 119 / 144]}, 2: {1: [57.8703703703704 / 100, 91 / 216], 2: [295 / 1296, 581 / 1296, 420 / 1296], 3: [979 / 7776, 4816 / 7776, 1981 / 7776]}, 3: {1: [855 / 1296, 441 / 1296], 2: [2890 / 7776, 2275 / 7776, 33.5776748971193 / 100], 3: [6420 / 46656, 17871 / 46656, 10017 / 46656, 12348 / 46656]}};
+    var zombies = {1: {1: [21 / 36, 15 / 36], 2: [91 / 216, 125 / 216]}, 2: {1: [161 / 216, 55 / 216], 2: [581 / 1296, 295 / 1296, 420 / 1296]}, 3: {1: [119 / 144, 25 / 144], 2: [4816 / 7776, 979 / 7776, 1981 / 7776]}};
+    var troopsLeft = {1: {1: [15 / 36, 21 / 36], 2: [25.462962962963 / 100, 161 / 216]}, 2: {1: [57.8703703703704 / 100, 91 / 216], 2: [295 / 1296, 581 / 1296, 420 / 1296]}, 3: {1: [855 / 1296, 441 / 1296], 2: [2890 / 7776, 2275 / 7776, 33.5776748971193 / 100]}};
+    var mode = 0,
+        span = document.createElement('span'),
+        battleResults = {};
+    span.class = 'tab';
+    function trueRandomSim(attack, defence) {
+        var tempAttack = Math.min(attack, 3),
+            tempDefence = Math.min(defence, 2);
+        if (attack <= 0) {
+            return 0;
+        }
+        else if (defence <= 0) {
+            return 1;
+        }
+        else {
+            var results = trueRandom[tempAttack][tempDefence];
+            if (results.length == 2) {
+                var cResult = (results[0] * trueRandomSim(attack, defence - 1)) + (results[1] * trueRandomSim(attack - 1, defence));
+                battleResults[attack][defence] = cResult;
+                return cResult;
+            }
+            else if (results.length == 3) {
+                var cResult = (results[0] * trueRandomSim(attack, defence - 2)) + (results[1] * trueRandomSim(attack - 2, defence)) + (results[2] * trueRandomSim(attack - 1, defence - 1));
+                battleResults[attack][defence] = cResult;
+                return cResult;
+            }
+        }
+    }
+    function capitalsSim(attack, defence) {
+        var tempAttack = Math.min(attack, 3),
+            tempDefence = Math.min(defence, 3);
+        if (attack <= 0) {
+            return 0;
+        }
+        else if (defence <= 0) {
+            return 1;
+        }
+        else {
+            var results = capitals[tempAttack][tempDefence];
+            if (results.length == 2) {
+                var cResult = (results[0] * capitalsSim(attack, defence - 1)) + (results[1] * capitalsSim(attack - 1, defence));
+                battleResults[attack][defence] = cResult;
+                return cResult;
+            }
+            else if (results.length == 3) {
+                var cResult = (results[0] * capitalsSim(attack, defence - 2)) + (results[1] * capitalsSim(attack - 2, defence)) + (results[2] * capitalsSim(attack - 1, defence - 1));
+                battleResults[attack][defence] = cResult;
+                return cResult;
+            }
+            else if (results.length == 4) {
+                var cResult = (results[0] * capitalsSim(attack, defence - 3)) + (results[1] * capitalsSim(attack - 3, defence)) + (results[2] * capitalsSim(attack - 1, defence - 2)) + (results[3] * capitalsSim(attack - 2, defence - 1));
+                battleResults[attack][defence] = cResult;
+                return cResult;
+            }
+        }
+    }
+    function zombiesSim(attack, defence) {
+        var tempAttack = Math.min(attack, 3),
+            tempDefence = Math.min(defence, 2);
+        if (attack <= 0) {
+            return 0;
+        }
+        else if (defence <= 0) {
+            return 1;
+        }
+        else {
+            var results = zombies[tempAttack][tempDefence];
+            if (results.length == 2) {
+                var cResult = (results[0] * zombiesSim(attack, defence - 1)) + (results[1] * zombiesSim(attack - 1, defence));
+                battleResults[attack][defence] = cResult;
+                return cResult;
+            }
+            else if (results.length == 3) {
+                var cResult = (results[0] * zombiesSim(attack, defence - 2)) + (results[1] * zombiesSim(attack - 2, defence)) + (results[2] * zombiesSim(attack - 1, defence - 1));
+                battleResults[attack][defence] = cResult;
+                return cResult;
+            }
+        }
+    }
+    function troopsLeftSim(attack, defence, type) {
+        if (type == 0) { //true random
+            var sim = trueRandomSim;
+        }
+        else if (type == 1) {
+            var sim = capitalsSim;
+        }
+        else if (type == 2) {
+            var sim = zombiesSim;
+        }
+        var attacks = [...Array(attack).keys()].map(n => attack - n), //getting all of the attack values
+            wins = attacks.map(attackers => sim(attackers, defence)),
+            left = wins.map((win, index) => (win - (wins[index + 1] || 0)) * 100);
+        left.unshift(100 * (1 - sim(attack, defence)));
+        return left;
+    }
+    function setTR() {mode = 0}
+    function setC() {mode = 1}
+    function setZ() {mode = 2}
+    function simulate() {
+        var attack = parseInt(document.getElementById('attackInput').value) || 0,
+            defence = parseInt(document.getElementById('defenceInput').value) || 0;
+        for (var i = 0; i <= attack; i++) {
+            battleResults[i] = {};
+        }
+        if (mode == 0) {
+            var win = trueRandomSim(attack, defence);
+        }
+        else if (mode == 1) {
+            var win = capitalsSim(attack, defence);
+        }
+        else if (mode == 2) {
+            var win = zombiesSim(attack, defence);
+        }
+        var left = troopsLeftSim(attack, defence, mode),
+            display = document.getElementById('display'),
+            troopsLeft = `Troops ​ ​ ​ ​ ​ ​ ​ ​ ​Chance\n` + left.map((chance, index) => `${index}${' ​'.repeat(15 - index.toString().length)}${chance}%`).join('\n');
+        display.innerText = `${win * 100}% chance of winning.\n\nTroops left:\n\n${troopsLeft}`;
+    }
+</script>
+<style>
+    body{font-family: monospace}
+</style>
